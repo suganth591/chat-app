@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chat Website</title>
+	<style>
+		/* CSS for the chat box */
+		.chat-box {
+			border: 1px solid #ccc;
+			height: 300px;
+			overflow: auto;
+			padding: 5px;
+		}
+
+		/* CSS for the chat message */
+		.chat-message {
+			margin-bottom: 6px;
+		}
+
+		/* CSS for the input form */
+		.input-form {
+			display: flex;
+			margin-top: 10px;
+		}
+
+		/* CSS for the input field */
+		.input-field {
+			flex: 1;
+			margin-right: 10px;
+			padding: 5px;
+		}
+
+		/* CSS for the submit button */
+		.submit-button {
+			background-color: #4CAF50;
+			border: none;
+			color: white;
+			padding: 5px 10px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+			margin: 4px 2px;
+			cursor: pointer;
+		}
+		.del{
+			color:red;
+		}
+		.del-btn{
+			color:red;
+			background-color: transparent;
+			font-size:smaller;
+			padding:2px;
+			text-align: center;
+			margin-right: 5px;
+			cursor:pointer;
+			font-weight: bolder;
+		}
+	</style>
+</head>
+<script>
+	var msg=0;
+	function send(){
+		var msg=document.getElementById('chat-msg');
+		if(msg.value!=''){
+		var xhr=new XMLHttpRequest();
+        xhr.open('post','http://localhost/api/add.php');
+        var data=new FormData();
+        data.append('user',sessionStorage.getItem('user'));
+        data.append('msg',msg.value);
+        xhr.send(data);
+	}else{
+		return
+	}
+		msg.value='';
+	}
+	function unsend(n){
+		if(confirm("Do Yoy want to delete this message")){
+			xhr=new XMLHttpRequest();
+			xhr.open('get','http://localhost/api/delete.php?id='+n);
+		    xhr.send();
+		}
+	}
+	function render(){
+		var xhr=new XMLHttpRequest();
+        xhr.open('get','http://localhost/api/messages.php');
+		xhr.send();
+		xhr.onload=function(){
+			var res=JSON.parse(xhr.response);
+			if(msg!=res.length){
+				msg=res.length;
+				var t='';
+				for(let i=0;i<res.length;i++){
+					if(res[i]['msg']==="Deleted By User"){
+						t+="<p class='chat-message del'>"+res[i]['user']+" : Message Deleted</p>";
+					}else{
+					if(res[i]['user']===sessionStorage.getItem('user')){
+						t+='<p id="chat-message"> <span class="del-btn" onclick="unsend('+res[i]['id']+')";> X </span>'+res[i]['user']+' : '+res[i]['msg']+'</p>';
+					}else{
+					t+="<p class='chat-message'>"+res[i]['user']+' : '+res[i]['msg']+"</p>";
+					}
+				}
+				}
+				document.getElementById('out-line').innerHTML=t;
+				
+			}
+		}
+	}
+	renderit=setInterval(render,1000);
+</script>
+<body>
+	<div class="chat-box" id="out-line">
+		
+	</div>
+	<div class="input-form">
+		<input type="text" id="chat-msg" class="input-field" placeholder="Type your message here">
+		<button onclick="send()" class="submit-button">Send</button>
+	</div>
+</body>
+</html>
